@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Hati</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            position: relative; /* Diperlukan untuk pseudo-element positioning */
+            overflow: hidden; /* Sembunyikan scrollbar awal */
+        }
+
+        /* Pseudo-element untuk latar belakang yang dapat diburamkan */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://files.catbox.moe/t7rbl8.jpg'); /* Gambar latar belakang yang sama */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            filter: blur(0px); /* Kondisi awal: tidak ada blur */
+            transition: filter 1s ease-out; /* Transisi halus untuk blur */
+            z-index: -1; /* Tempatkan di belakang konten */
+        }
+
+        /* Kelas untuk latar belakang buram */
+        body.blurred-background::before {
+            filter: blur(5px); /* Kondisi buram */
+        }
+
+        /* Gaya untuk splash screen */
+        #splash-screen {
+            background-color: rgba(255, 255, 255, 0.95); /* Sedikit transparan untuk efek modern */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            cursor: pointer;
+            transition: opacity 1s ease-out, visibility 1s ease-out;
+        }
+
+        #splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .envelope-icon {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            background-color: #f0f0f0; /* Warna dasar amplop */
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .envelope-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e0e0e0; /* Warna bagian atas amplop */
+            clip-path: polygon(0 0, 100% 0, 50% 50%); /* Bentuk segitiga atas */
+        }
+
+        .envelope-icon::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #d0d0d0; /* Warna bagian bawah amplop */
+            clip-path: polygon(0 100%, 100% 100%, 50% 50%); /* Bentuk segitiga bawah */
+        }
+
+        /* Gaya logo hati di tengah amplop */
+        .heart-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: #ff4d4d; /* Warna merah hati */
+            transform-origin: 50% 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .heart-logo::before,
+        .heart-logo::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #ff4d4d;
+            border-radius: 50%;
+        }
+
+        .heart-logo::before {
+            top: -50%;
+            left: 0;
+        }
+
+        .heart-logo::after {
+            top: 0;
+            left: 50%;
+        }
+
+        /* Rotasi untuk membentuk hati */
+        .heart-logo {
+            transform: translate(-50%, -50%) rotate(-45deg);
+            border-bottom-left-radius: 50%;
+            border-bottom-right-radius: 50%;
+        }
+
+        /* Gaya bingkai foto berbentuk hati */
+        .heart-frame {
+            width: 180px; /* Ukuran default untuk bingkai hati */
+            height: 180px;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            margin: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+            cursor: pointer;
+            /* Bentuk hati yang sempurna menggunakan clip-path */
+            clip-path: path('M 90 0 C 45 0 0 45 0 90 C 0 135 45 180 90 180 C 135 180 180 135 180 90 C 180 45 135 0 90 0 Z');
+            border-radius: 0; /* Pastikan border-radius tidak mengganggu clip-path */
+
+            /* Tambahkan border gradasi pink muda ke pink tua */
+            border: 4px solid;
+            border-image: linear-gradient(to right, #FFC0CB, #FF69B4, #FF1493) 1; /* Gradasi pink muda ke pink tua */
+            border-image-slice: 1; /* Pastikan seluruh border terisi gradasi */
+        }
+
+        /* Hover effect pada bingkai hati */
+        .heart-frame:hover {
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsif untuk ukuran layar yang berbeda */
+        @media (min-width: 640px) { /* Small screens and up */
+            .heart-frame {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        @media (min-width: 768px) { /* Medium screens and up */
+            .heart-frame {
+                width: 220px;
+                height: 220px;
+            }
+        }
+
+        @media (min-width: 1024px) { /* Large screens and up */
+            .heart-frame {
+                width: 250px;
+                height: 250px;
+            }
+        }
+
+        /* Animasi hati berjatuhan */
+        .heart-animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Penting agar tidak menghalangi interaksi */
+            overflow: hidden;
+            z-index: 999; /* Di bawah splash screen tapi di atas konten */
+        }
+
+        .falling-heart {
+            position: absolute;
+            background-color: #ff69b4; /* Pink hati */
+            width: 20px;
+            height: 20px;
+            transform: rotate(-45deg);
+            opacity: 0;
+            animation: fall linear infinite;
+        }
+
+        .falling-heart::before,
+        .falling-heart::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #ff69b4;
+            border-radius: 50%;
+        }
+
+        .falling-heart::before {
+            top: -50%;
+            left: 0;
+        }
+
+        .falling-heart::after {
+            top: 0;
+            left: 50%;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(-45deg) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(110vh) rotate(-45deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        /* Animasi fade in untuk galeri */
+        .fade-in {
+            animation: fadeInAnimation 1s ease-in forwards;
+        }
+
+        @keyframes fadeInAnimation {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Modal dasar */
+        .modal {
+            display: none; /* Sembunyikan secara default */
+            position: fixed; /* Tetap di atas semua konten */
+            z-index: 1001; /* Z-index lebih tinggi dari splash screen */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Wrapper konten modal */
+        .modal-content-wrapper {
+            background-color: white; /* Default background */
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: modalFloat 0.8s ease-out forwards;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Latar belakang gradasi untuk modal spesial/bouquet */
+        #specialImageModal .modal-content-wrapper {
+            background-image: linear-gradient(to bottom right, #FFC0CB, #FF69B4, #FF1493);
+            color: white;
+        }
+
+        .modal-content {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes modalFloat {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Efek hati pada modal */
+        .modal-heart-effect {
+            position: absolute;
+            background-color: #ff69b4; /* Warna pink hati */
+            width: 15px;
+            height: 15px;
+            transform: rotate(-45deg);
+            opacity: 0;
+            animation: heartPopEffect 1.5s ease-out forwards;
+            pointer-events: none; /* Pastikan tidak menghalangi klik pada gambar */
+        }
+
+        .modal-heart-effect::before,
+        .modal-heart-effect::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #ff69b4;
+            border-radius: 50%;
+        }
+
+        .modal-heart-effect::before {
+            top: -50%;
+            left: 0;
+        }
+
+        .modal-heart-effect::after {
+            top: 0;
+            left: 50%;
+        }
+
+        @keyframes heartPopEffect {
+            0% {
+                opacity: 0;
+                transform: scale(0) translateY(0) rotate(-45deg);
+            }
+            30% {
+                opacity: 0.8;
+                transform: scale(1.2) translateY(-10px) rotate(-45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8) translateY(-30px) rotate(-45deg);
+            }
+        }
+
+        /* Gaya untuk kontainer gambar spesial */
+        #specialImagesContainer {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        #specialImagesContainer img {
+            max-width: 30%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+            object-fit: cover;
+            
+            /* Border gradasi untuk gambar spesial */
+            border: 3px solid;
+            border-image: linear-gradient(to right, #FFC0CB, #FF69B4, #FF1493) 1;
+            border-image-slice: 1;
+        }
+
+        @media (max-width: 768px) {
+            #specialImagesContainer img {
+                max-width: 45%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #specialImagesContainer {
+                flex-direction: column;
+            }
+            #specialImagesContainer img {
+                max-width: 90%;
+            }
+        }
+
+        /* Gaya untuk modal pesan 3D */
+        #messageModal .modal-content-wrapper {
+            background-image: url('https://files.catbox.moe/l010cg.jpg'); /* Latar belakang gambar baru */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: transparent;
+            color: white;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            padding: 2rem;
+        }
+
+        #messageTextContainer {
+            animation: message3DEnter 1.5s ease-out forwards; /* Durasi animasi lebih panjang */
+            font-size: 1.5rem;
+            text-align: center;
+            color: white;
+            line-height: 1.6;
+            transform-origin: center center;
+            padding: 1rem;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @keyframes message3DEnter {
+            0% {
+                opacity: 0;
+                transform: rotateX(-90deg) scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateX(0deg) scale(1);
+            }
+        }
+
+        /* Efek hover untuk tombol */
+        .animated-button:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Gaya untuk modal gambar spesial yang dipilih */
+        #selectedSpecialImageModal .modal-content-wrapper {
+            background-color: rgba(255, 255, 255, 0.95); /* Latar belakang semi-transparan putih */
+            color: #4a4a4a;
+            padding: 2rem;
+        }
+
+        #selectedSpecialImageModal #selectedSpecialImage {
+            max-height: 70vh; /* Batasi tinggi gambar */
+            width: auto; /* Biarkan lebar mengikuti aspek rasio */
+            border: 4px solid; /* Border gradasi */
+            border-image: linear-gradient(to right, #FFC0CB, #FF69B4, #FF1493) 1;
+            border-image-slice: 1;
+            margin-bottom: 1.5rem; /* Spasi di bawah gambar */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
+
+    <!-- Kontainer animasi hati berjatuhan -->
+    <div id="heart-animation-container" class="heart-animation-container"></div>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="flex flex-col items-center justify-center text-gray-800">
+        <div class="envelope-icon">
+            <div class="heart-logo"></div>
+        </div>
+        <p class="mt-8 text-2xl font-semibold text-pink-600 tracking-wide">PENCET LOVE NYA KAKK</p>
+    </div>
+
+    <!-- Kontainer Galeri Foto -->
+    <div id="gallery-container" class="hidden container mx-auto px-4 py-8 fade-in">
+        <!-- Bingkai untuk judul -->
+        <div class="bg-white bg-opacity-80 p-4 sm:p-6 rounded-xl shadow-lg mb-12 border border-pink-300 mx-auto max-w-fit">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-center text-pink-700 leading-tight whitespace-nowrap">INI SIAPAA SI GEMES BANGETT</h1>
+        </div>
+        <div id="photo-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+            <!-- Foto-foto akan dimuat di sini oleh JavaScript -->
+        </div>
+
+        <!-- Tombol "KAKAAA LOPEEE, KLIK DONG" -->
+        <div class="text-center mt-12 mb-8">
+            <button id="loveButton" class="animated-button bg-gradient-to-r from-pink-400 to-pink-600 hover:from-pink-500 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300">
+                KAKAAA LOPEEE, KLIK DONG
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal untuk tampilan penuh gambar galeri -->
+    <div id="imageModal" class="modal">
+        <span class="close-button" id="closeImageModal">&times;</span>
+        <div class="modal-content-wrapper">
+            <img class="modal-content" id="modalImage">
+        </div>
+        <!-- Kontainer untuk efek hati pada modal gambar -->
+        <div id="image-modal-heart-effects-container" class="absolute w-full h-full pointer-events-none"></div>
+    </div>
+
+    <!-- Modal untuk Gambar Spesial (sekarang menampilkan semua gambar sekaligus) -->
+    <div id="specialImageModal" class="modal">
+        <span class="close-button" id="closeSpecialImageModal">&times;</span>
+        <div class="modal-content-wrapper">
+            <p class="text-3xl font-extrabold text-white mb-4 text-center">NIH AMBIL KAAAA</p>
+            <div id="specialImagesContainer" class="flex flex-wrap justify-center items-center">
+                <!-- Gambar-gambar spesial akan dimuat di sini oleh JavaScript -->
+            </div>
+            <!-- Tombol "KLIK LAGI KAAA" -->
+            <button id="clickAgainButton" class="animated-button bg-white bg-opacity-90 text-pink-700 font-bold py-3 px-8 rounded-full shadow-lg mt-8 transform transition duration-300">
+                KLIK LAGI KAAA
+            </button>
+        </div>
+        <!-- Kontainer untuk efek hati pada modal spesial -->
+        <div id="special-modal-heart-effects-container" class="absolute w-full h-full pointer-events-none"></div>
+    </div>
+
+    <!-- Modal untuk Pesan 3D -->
+    <div id="messageModal" class="modal">
+        <span class="close-button" id="closeMessageModal">&times;</span>
+        <div class="modal-content-wrapper">
+            <div id="messageTextContainer">
+                UDAA YAAA KAA JANGAN MARAH TERUS ADEK SEDIH BANGETT TAUU, ADEKK MAAF BANGENTT YAA KAAA GARAA2 ADEKK KAKAA JADII SEMARAH INII, ADEK BINGUNG BANGET HARUS APA BIAR KAKA ENGGA MARAH LAGII, KANGENN KAKAAA ADEKKKK☹️☹️
+            </div>
+        </div>
+        <!-- Kontainer untuk efek hati pada modal pesan -->
+        <div id="message-modal-heart-effects-container" class="absolute w-full h-full pointer-events-none"></div>
+    </div>
+
+    <!-- Modal untuk Gambar Spesial yang Dipilih (Pop-up Individual) -->
+    <div id="selectedSpecialImageModal" class="modal">
+        <span class="close-button" id="closeSelectedSpecialImageModal">&times;</span>
+        <div class="modal-content-wrapper">
+            <img class="modal-content" id="selectedSpecialImage" alt="Selected Special Image">
+            <button id="mauYangIniButton" class="animated-button bg-gradient-to-r from-pink-400 to-pink-600 hover:from-pink-500 hover:to-pink-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition duration-300 mt-6">
+                MAU YANG INII?
+            </button>
+        </div>
+        <!-- Kontainer untuk efek hati pada modal gambar yang dipilih -->
+        <div id="selected-special-image-modal-heart-effects-container" class="absolute w-full h-full pointer-events-none"></div>
+    </div>
+
+
+    <script>
+        const photoUrls = [
+            'https://files.catbox.moe/6aepap.jpg',
+            'https://files.catbox.moe/9oovqo.jpg',
+            'https://files.catbox.moe/y323sc.jpg',
+            'https://files.catbox.moe/c9pbea.jpg',
+            'https://files.catbox.moe/fcqp14.jpg',
+            'https://files.catbox.moe/y4s094.jpg',
+            'https://files.catbox.moe/l010cg.jpg',
+            'https://files.catbox.moe/q4fnlf.jpg'
+        ];
+
+        const specialImageUrls = [
+            'https://files.catbox.moe/mmnibz.jpg',
+            'https://files.catbox.moe/v5x3t1.jpg',
+            'https://files.catbox.moe/qtmu0i.jpg'
+        ];
+        
+        // Variabel untuk menyimpan URL gambar spesial yang saat ini dipilih
+        let currentSelectedSpecialImageUrl = '';
+
+        const splashScreen = document.getElementById('splash-screen');
+        const galleryContainer = document.getElementById('gallery-container');
+        const photoGrid = document.getElementById('photo-grid');
+        const heartAnimationContainer = document.getElementById('heart-animation-container');
+
+        // Referensi untuk modal gambar galeri
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const closeImageModal = document.getElementById('closeImageModal');
+        const imageModalHeartEffectsContainer = document.getElementById('image-modal-heart-effects-container');
+
+        // Referensi untuk tombol dan modal gambar spesial (kumpulan)
+        const loveButton = document.getElementById('loveButton');
+        const specialImageModal = document.getElementById('specialImageModal');
+        const closeSpecialImageModal = document.getElementById('closeSpecialImageModal');
+        const specialImagesContainer = document.getElementById('specialImagesContainer');
+        const specialModalHeartEffectsContainer = document.getElementById('special-modal-heart-effects-container');
+
+        // Referensi untuk modal pesan 3D
+        const clickAgainButton = document.getElementById('clickAgainButton');
+        const messageModal = document.getElementById('messageModal');
+        const closeMessageModal = document.getElementById('closeMessageModal');
+        const messageModalHeartEffectsContainer = document.getElementById('message-modal-heart-effects-container');
+
+        // Referensi untuk modal gambar spesial yang dipilih secara individual
+        const selectedSpecialImageModal = document.getElementById('selectedSpecialImageModal');
+        const selectedSpecialImage = document.getElementById('selectedSpecialImage');
+        const mauYangIniButton = document.getElementById('mauYangIniButton');
+        const closeSelectedSpecialImageModal = document.getElementById('closeSelectedSpecialImageModal');
+        const selectedSpecialImageModalHeartEffectsContainer = document.getElementById('selected-special-image-modal-heart-effects-container');
+
+
+        // Fungsi untuk membuat elemen hati berjatuhan di latar belakang
+        function createFallingHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('falling-heart');
+            heart.style.left = `${Math.random() * 100}vw`; // Posisi horizontal acak
+            heart.style.animationDuration = `${Math.random() * 3 + 5}s`; // Durasi animasi acak (5-8s)
+            heart.style.animationDelay = `-${Math.random() * 5}s`; // Penundaan acak untuk efek kontinu
+            heart.style.opacity = Math.random() * 0.5 + 0.3; // Opasitas acak
+            heart.style.width = heart.style.height = `${Math.random() * 10 + 10}px`; // Ukuran acak (10-20px)
+            heartAnimationContainer.appendChild(heart);
+
+            // Hapus elemen hati setelah animasinya selesai untuk menghemat memori
+            heart.addEventListener('animationend', () => {
+                heart.remove();
+            });
+        }
+
+        // Memulai animasi hati berjatuhan secara terus menerus
+        function startHeartAnimation() {
+            setInterval(createFallingHeart, 300); // Buat hati baru setiap 300ms
+        }
+
+        // Fungsi untuk memuat foto ke dalam galeri
+        function loadPhotos() {
+            photoUrls.forEach(url => {
+                const heartFrame = document.createElement('div');
+                heartFrame.classList.add('heart-frame');
+                heartFrame.style.backgroundImage = `url('${url}')`;
+                
+                // Menambahkan event listener untuk membuka modal saat foto diklik
+                heartFrame.addEventListener('click', () => {
+                    modalImage.src = url;
+                    imageModal.style.display = 'flex'; // Tampilkan modal
+                    document.body.style.overflow = 'hidden'; // Nonaktifkan scroll body saat modal terbuka
+                    spawnHearts(imageModalHeartEffectsContainer); // Panggil fungsi untuk efek hati
+                });
+                
+                photoGrid.appendChild(heartFrame);
+            });
+        }
+
+        // Fungsi generik untuk membuat efek hati pada kontainer tertentu
+        function spawnHearts(container) {
+            container.innerHTML = ''; // Pastikan container bersih sebelum menambahkan hati baru
+            const numHearts = 10; // Jumlah hati yang akan muncul (ditingkatkan untuk efek lebih banyak)
+
+            for (let i = 0; i < numHearts; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('modal-heart-effect');
+                
+                // Posisi acak relatif terhadap kontainer
+                // Pastikan container memiliki lebar dan tinggi saat ini untuk perhitungan yang akurat
+                const containerRect = container.getBoundingClientRect();
+                const offsetX = (Math.random() - 0.5) * containerRect.width;
+                const offsetY = (Math.random() - 0.5) * containerRect.height;
+
+                heart.style.left = `calc(50% + ${offsetX}px)`;
+                heart.style.top = `calc(50% + ${offsetY}px)`;
+                heart.style.animationDelay = `${i * 0.1}s`; // Penundaan agar muncul bergantian
+                
+                container.appendChild(heart);
+
+                // Hapus hati setelah animasinya selesai
+                heart.addEventListener('animationend', () => {
+                    heart.remove();
+                });
+            }
+        }
+
+        // Event listener untuk splash screen
+        splashScreen.addEventListener('click', () => {
+            splashScreen.classList.add('hidden');
+            galleryContainer.classList.remove('hidden');
+            document.body.classList.add('blurred-background');
+            document.body.style.overflow = 'auto';
+            loadPhotos();
+            startHeartAnimation();
+        });
+
+        // Event listener untuk tombol tutup modal gambar galeri
+        closeImageModal.addEventListener('click', () => {
+            imageModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            imageModalHeartEffectsContainer.innerHTML = '';
+        });
+
+        // Menutup modal gambar galeri saat mengklik di luar gambar
+        imageModal.addEventListener('click', (event) => {
+            if (event.target === imageModal) {
+                imageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                imageModalHeartEffectsContainer.innerHTML = '';
+            }
+        });
+
+        // Fungsi untuk memuat dan menampilkan gambar-gambar spesial secara bersamaan
+        function loadSpecialImages() {
+            specialImagesContainer.innerHTML = ''; // Bersihkan konten sebelumnya
+            specialImageUrls.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Gambar Spesial';
+                // Gunakan kelas Tailwind untuk responsivitas dan gaya
+                img.classList.add('w-full', 'sm:w-1/2', 'lg:w-1/3', 'object-cover', 'rounded-lg', 'shadow-md', 'transform', 'transition', 'duration-300', 'hover:scale-105');
+                
+                // Tambahkan event listener untuk setiap gambar spesial
+                img.addEventListener('click', () => {
+                    currentSelectedSpecialImageUrl = url; // Simpan URL gambar yang diklik
+                    selectedSpecialImage.src = url; // Tampilkan gambar di modal baru
+                    selectedSpecialImageModal.style.display = 'flex'; // Tampilkan modal gambar yang dipilih
+                    document.body.style.overflow = 'hidden'; // Nonaktifkan scroll body
+                    spawnHearts(selectedSpecialImageModalHeartEffectsContainer); // Efek hati di modal baru
+                });
+
+                specialImagesContainer.appendChild(img);
+            });
+        }
+
+        // Event listener untuk tombol "KAKAAA LOPEEE, KLIK DONG"
+        loveButton.addEventListener('click', () => {
+            specialImageModal.style.display = 'flex'; // Tampilkan modal gambar spesial (kumpulan)
+            document.body.style.overflow = 'hidden';
+            loadSpecialImages(); // Muat semua gambar spesial
+            spawnHearts(specialModalHeartEffectsContainer);
+        });
+
+        // Event listener untuk tombol tutup modal gambar spesial (kumpulan)
+        closeSpecialImageModal.addEventListener('click', () => {
+            specialImageModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            specialModalHeartEffectsContainer.innerHTML = '';
+        });
+
+        // Menutup modal gambar spesial (kumpulan) saat mengklik di luar konten modal
+        specialImageModal.addEventListener('click', (event) => {
+            if (event.target === specialImageModal) {
+                specialImageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                specialModalHeartEffectsContainer.innerHTML = '';
+            }
+        });
+
+        // Event listener untuk tombol "KLIK LAGI KAAA"
+        clickAgainButton.addEventListener('click', () => {
+            specialImageModal.style.display = 'none'; // Sembunyikan modal gambar spesial (kumpulan)
+            messageModal.style.display = 'flex'; // Tampilkan modal pesan
+            document.body.style.overflow = 'hidden';
+            spawnHearts(messageModalHeartEffectsContainer); 
+        });
+
+        // Event listener untuk tombol tutup modal pesan 3D
+        closeMessageModal.addEventListener('click', () => {
+            messageModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            messageModalHeartEffectsContainer.innerHTML = '';
+        });
+
+        // Menutup modal pesan 3D saat mengklik di luar konten modal
+        messageModal.addEventListener('click', (event) => {
+            if (event.target === messageModal) {
+                messageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                messageModalHeartEffectsContainer.innerHTML = '';
+            }
+        });
+
+        // Event listener untuk tombol "MAU YANG INII?"
+        mauYangIniButton.addEventListener('click', () => {
+            const phoneNumber = '6285816148963'; // Nomor WhatsApp Anda telah diperbarui
+            const message = encodeURIComponent(`kakaa mauu yangg inii dekk, gambar ini: ${currentSelectedSpecialImageUrl}`);
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+            
+            window.open(whatsappUrl, '_blank'); // Buka WhatsApp di tab baru
+        });
+
+        // Event listener untuk tombol tutup modal gambar spesial yang dipilih
+        closeSelectedSpecialImageModal.addEventListener('click', () => {
+            selectedSpecialImageModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            selectedSpecialImageModalHeartEffectsContainer.innerHTML = '';
+        });
+
+        // Menutup modal gambar spesial yang dipilih saat mengklik di luar konten modal
+        selectedSpecialImageModal.addEventListener('click', (event) => {
+            if (event.target === selectedSpecialImageModal) {
+                selectedSpecialImageModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                selectedSpecialImageModalHeartEffectsContainer.innerHTML = '';
+            }
+        });
+     </script>
+  </body>
+  </html>
+
+  
+
+
+
